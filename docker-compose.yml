@@ -6,15 +6,28 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - PORT=3000
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_USER=root
       - DB_PASSWORD=screenshot_password
       - DB_NAME=screenshot_service
       - CACHE_DURATION_DAYS=7
+      - SCREENSHOT_TIMEOUT=30000
+      - MAX_SCREENSHOT_WIDTH=1920
+      - MAX_SCREENSHOT_HEIGHT=1080
+      # OSS配置 - 请在.env文件中设置实际值
+      - ALIOSS_ACCESS_KEY_ID=${ALIOSS_ACCESS_KEY_ID}
+      - ALIOSS_ACCESS_KEY_SECRET=${ALIOSS_ACCESS_KEY_SECRET}
+      - ALIOSS_BUCKET_NAME=${ALIOSS_BUCKET_NAME}
+      - ALIOSS_REGION=${ALIOSS_REGION}
+      - ALIOSS_ENDPOINT=${ALIOSS_ENDPOINT}
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - ./public:/app/public
 
   mysql:
     image: mysql:8.0
@@ -26,6 +39,10 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
 volumes:
   mysql_data:

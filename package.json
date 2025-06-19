@@ -8,7 +8,12 @@
     "dev": "nodemon src/server.js",
     "install-playwright": "npx playwright install",
     "init-db": "node src/scripts/init-db.js",
-    "migrate-oss": "node src/scripts/migrate-to-oss.js"
+    "migrate-oss": "node src/scripts/migrate-to-oss.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f app",
+    "docker:test": "./test-docker.sh"
   },
   "keywords": [
     "screenshot",
