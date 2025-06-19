@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站截图服务 - 测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .screenshot-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .screenshot-preview img {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .info-value {
+            margin-top: 5px;
+            word-break: break-all;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ 网站截图服务</h1>
+            <p>输入网站URL，获取高质量截图和网站信息</p>
+        </div>
+        
+        <div class="content">
+            <form id="screenshotForm">
+                <div class="form-group">
+                    <label for="url">网站URL *</label>
+                    <input type="url" id="url" name="url" placeholder="https://example.com" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="width">宽度 (px)</label>
+                        <input type="number" id="width" name="width" value="1200" min="320" max="1920">
+                    </div>
+                    <div class="form-group">
+                        <label for="height">高度 (px)</label>
+                        <input type="number" id="height" name="height" value="800" min="240" max="1080">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fullPage">截图模式</label>
+                    <select id="fullPage" name="fullPage">
+                        <option value="false">视窗截图</option>
+                        <option value="true">全页截图</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">
+                    📸 生成截图
+                </button>
+            </form>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>正在生成截图，请稍候...</p>
+            </div>
+            
+            <div id="result" class="result">
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('screenshotForm');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+            
+            for (const [key, value] of formData.entries()) {
+                if (value) params.append(key, value);
+            }
+            
+            // 显示加载状态
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '生成中...';
+            
+            try {
+                const response = await fetch(`/api/screenshot?${params}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(data.data);
+                } else {
+                    showError(data.error || '截图生成失败');
+                }
+            } catch (error) {
+                showError('网络请求失败: ' + error.message);
+            } finally {
+                // 隐藏加载状态
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📸 生成截图';
+            }
+        });
+
+        function showSuccess(data) {
+            result.className = 'result success';
+            result.style.display = 'block';
+            
+            resultContent.innerHTML = `
+                <h3>✅ 截图生成成功${data.cached ? ' (使用缓存)' : ''}</h3>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">网站标题</div>
+                        <div class="info-value">${data.title || '无'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">尺寸</div>
+                        <div class="info-value">${data.width} × ${data.height}px</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">模式</div>
+                        <div class="info-value">${data.fullPage ? '全页截图' : '视窗截图'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">生成时间</div>
+                        <div class="info-value">${new Date(data.createdAt).toLocaleString()}</div>
+                    </div>
+                </div>
+                
+                ${data.description ? `
+                    <div class="info-item" style="margin-top: 15px;">
+                        <div class="info-label">网站描述</div>
+                        <div class="info-value">${data.description}</div>
+                    </div>
+                ` : ''}
+                
+                ${data.keywords ? `
+                    <div class="info-item" style="margin-top: 15px;">
+                        <div class="info-label">关键词</div>
+                        <div class="info-value">${data.keywords}</div>
+                    </div>
+                ` : ''}
+                
+                <div class="screenshot-preview">
+                    <img src="${data.screenshotUrl || `data:image/png;base64,${data.screenshot}`}" alt="网站截图" />
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            result.className = 'result error';
+            result.style.display = 'block';
+            resultContent.innerHTML = `
+                <h3>❌ 截图生成失败</h3>
+                <p>${message}</p>
+            `;
+        }
+
+        // 预填充一些示例URL
+        const examples = [
+            'https://www.baidu.com',
+            'https://github.com',
+            'https://www.google.com',
+            'https://stackoverflow.com'
+        ];
+        
+        // 随机选择一个示例URL作为placeholder
+        const urlInput = document.getElementById('url');
+        const randomExample = examples[Math.floor(Math.random() * examples.length)];
+        urlInput.placeholder = randomExample;
+    </script>
+</body>
+</html>
