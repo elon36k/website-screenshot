@@ -1,5 +1,5 @@
 {
-  "name": "websnapshot",
+  "name": "website-screenshot",
   "version": "1.0.0",
   "description": "Website screenshot service with caching using Playwright and MySQL",
   "main": "src/server.js",
