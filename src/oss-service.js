@@ -15,7 +15,8 @@ class OSSService {
         accessKeyId: process.env.ALIOSS_ACCESS_KEY_ID,
         accessKeySecret: process.env.ALIOSS_ACCESS_KEY_SECRET,
         bucket: this.bucketName,
-        endpoint: this.endpoint
+        endpoint: this.endpoint,
+        secure: true,
       });
       console.log('OSS client initialized');
     }

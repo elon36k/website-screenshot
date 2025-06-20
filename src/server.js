@@ -18,7 +18,21 @@ const ossService = new OSSService();
 const screenshotService = new ScreenshotService();
 
 // 中间件
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+}));
 app.use(cors());
 app.use(express.json());
 
@@ -219,26 +233,27 @@ const server = app.listen(port, () => {
   console.log(`截图接口: http://localhost:${port}/api/screenshot?url=https://example.com`);
 });
 
+// 目前不需要执行
 // 定期清理过期缓存 (每天执行一次)
-setInterval(async () => {
-  try {
-    const result = await db.deleteOldScreenshots();
+// setInterval(async () => {
+//   try {
+//     const result = await db.deleteOldScreenshots();
     
-    // 同时清理OSS中的文件
-    if (result.ossUrls && result.ossUrls.length > 0) {
-      try {
-        await ossService.deleteFiles(result.ossUrls);
-        console.log(`自动清理了 ${result.deletedCount} 条过期记录和 ${result.ossUrls.length} 个OSS文件`);
-      } catch (ossError) {
-        console.error('OSS文件自动清理失败:', ossError);
-        console.log(`自动清理了 ${result.deletedCount} 条过期记录（OSS清理失败）`);
-      }
-    } else if (result.deletedCount > 0) {
-      console.log(`自动清理了 ${result.deletedCount} 条过期记录`);
-    }
-  } catch (error) {
-    console.error('自动清理缓存失败:', error);
-  }
-}, 24 * 60 * 60 * 1000); // 24小时
+//     // 同时清理OSS中的文件
+//     if (result.ossUrls && result.ossUrls.length > 0) {
+//       try {
+//         await ossService.deleteFiles(result.ossUrls);
+//         console.log(`自动清理了 ${result.deletedCount} 条过期记录和 ${result.ossUrls.length} 个OSS文件`);
+//       } catch (ossError) {
+//         console.error('OSS文件自动清理失败:', ossError);
+//         console.log(`自动清理了 ${result.deletedCount} 条过期记录（OSS清理失败）`);
+//       }
+//     } else if (result.deletedCount > 0) {
+//       console.log(`自动清理了 ${result.deletedCount} 条过期记录`);
+//     }
+//   } catch (error) {
+//     console.error('自动清理缓存失败:', error);
+//   }
+// }, 24 * 60 * 60 * 1000); // 24小时
 
 module.exports = app;
